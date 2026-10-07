@@ -1,0 +1,144 @@
+﻿from pathlib import Path
+
+spec = """STAGE 10 - STEP 4.2
+RESEARCH FRAMEWORK FOUNDATION SPECIFICATION
+
+PURPOSE
+-------
+Create an isolated experimental framework for controlled
+Baseline-vs-Candidate evaluation.
+
+CORE ENTITIES
+-------------
+
+1. EXPERIMENT
+   experiment_id
+   name
+   description
+   mechanism_version
+   status
+   created_at
+
+2. EXPERIMENT_RUN
+   run_id
+   experiment_id
+   run_role
+   baseline_or_candidate
+   start_time
+   end_time
+   random_seed
+   configuration_fingerprint
+   software_version
+   validity_status
+
+3. FAULT_SCENARIO
+   fault_id
+   run_id
+   fault_type
+   target
+   activation_time
+   end_time
+   parameters
+   expected_effect
+   actual_effect
+
+4. OBSERVATION
+   observation_id
+   run_id
+   timestamp
+   entity_type
+   entity_id
+   observation_type
+   value
+   source
+
+5. GROUND_TRUTH
+   ground_truth_id
+   run_id
+   timestamp
+   fault_state
+   expected_state
+   source
+
+6. METRIC
+   metric_id
+   run_id
+   timestamp
+   metric_name
+   value
+   unit
+
+7. EVIDENCE
+   evidence_id
+   run_id
+   timestamp
+   evidence_type
+   reference
+   description
+
+RUN ROLES
+---------
+BASELINE
+CANDIDATE
+
+FAULT LIFECYCLE
+---------------
+SCHEDULED
+ACTIVE
+RECOVERING
+COMPLETED
+FAILED
+
+RUN VALIDITY
+------------
+VALID
+INVALID
+INCOMPLETE
+
+REPRODUCIBILITY REQUIREMENTS
+----------------------------
+Every run must preserve:
+- mechanism version
+- software version
+- configuration fingerprint
+- random seed where applicable
+- fault parameters
+- start/end timestamps
+- baseline/candidate identity
+
+ISOLATION RULE
+--------------
+The research framework must not become an alternative
+authoritative source of vehicle operational state.
+
+AUTHORITATIVE OPERATIONAL DATA REMAINS:
+vehicle/device input
+        ->
+authoritative backend database
+        ->
+derived intelligence
+        ->
+events/alerts
+        ->
+realtime distribution
+
+APPLICATION_CODE_MODIFIED=NO
+DATABASE_MODIFIED=NO
+MIGRATION_CREATED=NO
+"""
+
+Path("stage10_step4_2_research_framework_spec.txt").write_text(
+    spec,
+    encoding="utf-8"
+)
+
+print("=" * 70)
+print("STAGE 10 - STEP 4.2")
+print("RESEARCH FRAMEWORK FOUNDATION")
+print("=" * 70)
+print("SPECIFICATION_CREATED=YES")
+print("FILE=stage10_step4_2_research_framework_spec.txt")
+print("APPLICATION_CODE_MODIFIED=NO")
+print("DATABASE_MODIFIED=NO")
+print("MIGRATION_CREATED=NO")
+print("=" * 70)

@@ -1,0 +1,1298 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>V2V Firebase Authentication Test</title>
+</head>
+<body>
+<button id="browserNetworkDiagnosticButton" type="button"
+        onclick="runBrowserNetworkDiagnostic()">
+    Browser Network Diagnostic
+</button>
+<button id="tokenIsolationDiagnosticButton" type="button"
+        onclick="runTokenIsolationDiagnostic()">
+    Token Isolation Diagnostic
+</button>
+<button id="routeStopTestButton" onclick="runRouteStopTest()">
+    Run Route Stop Test
+</button>
+    <h2>V2V Firebase Authentication Test</h2>
+
+    <label>Email:</label><br>
+    <input id="email" type="email" value="bosearitra65@gmail.com"><br><br>
+
+    <label>Password:</label><br>
+    <input id="password" type="password"><br><br>
+
+    <button id="login">Sign in and test backend</button><br><br>
+    <button id="testVehicle">Test V001 State</button><br><br><button id="testVehicles">Test Vehicle Management</button><br><br><button id="testConvoys">Test Convoy Management</button><br><br><button id="testJourneys">Test Journey Management</button><br><br><button id="testEvents">Test Events</button><br><br><button id="testAlerts">Test Alerts</button><br><br><button id="testWorkflow">Run Full Operational Workflow</button><br><br><button id="testUsers">Test User Management</button>
+
+    <pre id="result"></pre>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+        import {
+            getAuth,
+            signInWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDI_Ela4AxcjCD4Pi96f2XsZ__J5FDQ_8k",
+            authDomain: "v2v-vehicle-communication.firebaseapp.com",
+            projectId: "v2v-vehicle-communication",
+            storageBucket: "v2v-vehicle-communication.firebasestorage.app",
+            messagingSenderId: "478280605684",
+            appId: "1:478280605684:web:2d43406ca78efb010d23a1"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        window.v2vFirebaseAuth = auth;
+
+        const result = document.getElementById("result");
+        let currentUser = null;
+
+        document.getElementById("testVehicle").addEventListener("click", async () => {
+            result.textContent = "Testing V001 state...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/vehicle/V001/state",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `V001 State HTTP status: ${response.status}\\n\\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\\n\\n" +
+                    (error.code || "") +
+                    "\\n" +
+                    error.message;
+            }
+        });
+
+
+        document.getElementById("testVehicles").addEventListener("click", async () => {
+            result.textContent = "Testing vehicle management...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/vehicles",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `Vehicle Management HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    (error.code || "") +
+                    "\n" +
+                    error.message;
+            }
+        });
+
+        document.getElementById("testConvoys").addEventListener("click", async () => {
+            result.textContent = "Testing convoy management...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/convoys",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `Convoy Management HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    (error.code || "") +
+                    "\n" +
+                    error.message;
+            }
+        });
+
+        document.getElementById("testJourneys").addEventListener("click", async () => {
+            result.textContent = "Testing journey management...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/journeys",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `Journey Management HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    (error.code || "") +
+                    "\n" +
+                    error.message;
+            }
+        });
+
+        document.getElementById("testEvents").addEventListener("click", async () => {
+            result.textContent = "Testing events...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/events",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `Events HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    (error.code || "") +
+                    "\n" +
+                    error.message;
+            }
+        });
+
+        document.getElementById("testAlerts").addEventListener("click", async () => {
+            result.textContent = "Testing alerts...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/alerts",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `Alerts HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    (error.code || "") +
+                    "\n" +
+                    error.message;
+            }
+        });
+
+        document.getElementById("testWorkflow").addEventListener("click", async () => {
+            result.textContent = "Running full operational workflow...";
+
+            const results = [];
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                async function api(method, path, body = null) {
+                    const options = {
+                        method,
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`,
+                            "Content-Type": "application/json"
+                        }
+                    };
+
+                    if (body !== null) {
+                        options.body = JSON.stringify(body);
+                    }
+
+                    const response = await fetch(
+                        `http://127.0.0.1:8001${path}`,
+                        options
+                    );
+
+                    let data = {};
+                    try {
+                        data = await response.json();
+                    } catch (_) {
+                        data = {};
+                    }
+
+                    return { response, data };
+                }
+
+                async function ensureVehicle(vehicleId, deviceId, name) {
+                    let r = await api("GET", `/api/v1/vehicles/${vehicleId}`);
+
+                    if (r.response.status === 200) {
+                        results.push(`Vehicle ${vehicleId}: already exists`);
+                        return;
+                    }
+
+                    r = await api("POST", "/api/v1/vehicles", {
+                        vehicle_id: vehicleId,
+                        device_id: deviceId,
+                        name: name
+                    });
+
+                    if (r.response.status !== 201) {
+                        throw new Error(
+                            `Vehicle ${vehicleId} creation failed: HTTP ${r.response.status}\n` +
+                            JSON.stringify(r.data)
+                        );
+                    }
+
+                    results.push(`Vehicle ${vehicleId}: created`);
+                }
+
+                await ensureVehicle(
+                    "V002",
+                    "TEST-V002",
+                    "Test Follower Vehicle B"
+                );
+
+                await ensureVehicle(
+                    "V003",
+                    "TEST-V003",
+                    "Test Follower Vehicle C"
+                );
+
+                let r = await api("GET", "/api/v1/convoys/C001");
+
+                if (r.response.status === 404) {
+                    r = await api("POST", "/api/v1/convoys", {
+                        convoy_id: "C001",
+                        name: "Test Convoy Alpha",
+                        status: "planned"
+                    });
+
+                    if (r.response.status !== 201) {
+                        throw new Error(
+                            `Convoy creation failed: HTTP ${r.response.status}\n` +
+                            JSON.stringify(r.data)
+                        );
+                    }
+
+                    results.push("Convoy C001: created");
+                } else if (r.response.status === 200) {
+                    results.push("Convoy C001: already exists");
+                } else {
+                    throw new Error(
+                        `Convoy lookup failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                async function ensureMember(vehicleId, role) {
+                    const members = await api(
+                        "GET",
+                        "/api/v1/convoys/C001/members"
+                    );
+
+                    if (members.response.status !== 200) {
+                        throw new Error(
+                            `Member lookup failed: HTTP ${members.response.status}\n` +
+                            JSON.stringify(members.data)
+                        );
+                    }
+
+                    const exists = (members.data.data || []).some(
+                        member => member.vehicle_id === vehicleId
+                    );
+
+                    if (exists) {
+                        results.push(`C001 member ${vehicleId}: already exists`);
+                        return;
+                    }
+
+                    const add = await api(
+                        "POST",
+                        "/api/v1/convoys/C001/members",
+                        {
+                            vehicle_id: vehicleId,
+                            role: role
+                        }
+                    );
+
+                    if (add.response.status !== 201) {
+                        throw new Error(
+                            `Adding ${vehicleId} to C001 failed: HTTP ${add.response.status}\n` +
+                            JSON.stringify(add.data)
+                        );
+                    }
+
+                    results.push(`C001 member ${vehicleId}: added as ${role}`);
+                }
+
+                await ensureMember("V001", "leader");
+                await ensureMember("V002", "follower");
+                await ensureMember("V003", "follower");
+
+                r = await api(
+                    "POST",
+                    "/api/v1/convoys/C001/leader",
+                    {
+                        vehicle_id: "V001"
+                    }
+                );
+
+                if (r.response.status !== 200) {
+                    throw new Error(
+                        `Leader assignment failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                results.push("V001: assigned as convoy leader");
+
+                r = await api("GET", "/api/v1/routes/R001");
+
+                if (r.response.status === 404) {
+                    r = await api("POST", "/api/v1/routes", {
+                        route_id: "R001",
+                        origin: "Point A",
+                        destination: "Point B",
+                        geometry: JSON.stringify({
+                            type: "LineString",
+                            coordinates: [
+                                [88.486, 22.726],
+                                [88.500, 22.730],
+                                [88.515, 22.735]
+                            ]
+                        }),
+                        distance: 5.0,
+                        estimated_duration: 900
+                    });
+
+                    if (r.response.status !== 201) {
+                        throw new Error(
+                            `Route creation failed: HTTP ${r.response.status}\n` +
+                            JSON.stringify(r.data)
+                        );
+                    }
+
+                    results.push("Route R001: created");
+                } else if (r.response.status === 200) {
+                    results.push("Route R001: already exists");
+                } else {
+                    throw new Error(
+                        `Route lookup failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                r = await api("GET", "/api/v1/journeys/J001");
+
+                if (r.response.status === 404) {
+                    r = await api("POST", "/api/v1/journeys", {
+                        journey_id: "J001",
+                        convoy_id: "C001",
+                        origin: "Point A",
+                        destination: "Point B"
+                    });
+
+                    if (r.response.status !== 201) {
+                        throw new Error(
+                            `Journey creation failed: HTTP ${r.response.status}\n` +
+                            JSON.stringify(r.data)
+                        );
+                    }
+
+                    results.push("Journey J001: created");
+                } else if (r.response.status === 200) {
+                    results.push("Journey J001: already exists");
+                } else {
+                    throw new Error(
+                        `Journey lookup failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                r = await api(
+                    "POST",
+                    "/api/v1/journeys/J001/route/R001"
+                );
+
+                if (r.response.status === 200) {
+                    results.push("J001: route R001 assigned");
+                } else if (r.response.status === 400 || r.response.status === 409) {
+                    results.push(
+                        `J001: route assignment returned ${r.response.status}; continuing`
+                    );
+                } else {
+                    throw new Error(
+                        `Route assignment failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                r = await api(
+                    "POST",
+                    "/api/v1/journeys/J001/start"
+                );
+
+                if (r.response.status === 200) {
+                    results.push("J001: STARTED");
+                } else {
+                    throw new Error(
+                        `Journey start failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                r = await api(
+                    "POST",
+                    "/api/v1/journeys/J001/pause"
+                );
+
+                if (r.response.status !== 200) {
+                    throw new Error(
+                        `Journey pause failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                results.push("J001: PAUSED");
+
+                r = await api(
+                    "POST",
+                    "/api/v1/journeys/J001/resume"
+                );
+
+                if (r.response.status !== 200) {
+                    throw new Error(
+                        `Journey resume failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                results.push("J001: RESUMED");
+
+                r = await api(
+                    "POST",
+                    "/api/v1/journeys/J001/complete"
+                );
+
+                if (r.response.status !== 200) {
+                    throw new Error(
+                        `Journey completion failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                results.push("J001: COMPLETED");
+
+                r = await api("GET", "/api/v1/journeys/J001");
+
+                if (r.response.status !== 200) {
+                    throw new Error(
+                        `Final journey verification failed: HTTP ${r.response.status}\n` +
+                        JSON.stringify(r.data)
+                    );
+                }
+
+                results.push(
+                    "Final J001 state: " +
+                    (r.data.data?.status || "unknown")
+                );
+
+                result.textContent =
+                    "FULL OPERATIONAL WORKFLOW SUCCESS\n\n" +
+                    results.map((x, i) => `${i + 1}. ${x}`).join("\n") +
+                    "\n\nFinal Journey:\n" +
+                    JSON.stringify(r.data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "WORKFLOW STOPPED WITH ERROR\n\n" +
+                    results.map((x, i) => `${i + 1}. ${x}`).join("\n") +
+                    "\n\nERROR:\n" +
+                    error.message;
+            }
+        });
+
+        document.getElementById("testUsers").addEventListener("click", async () => {
+            result.textContent = "Testing user management...";
+
+            try {
+                if (!auth.currentUser) {
+                    throw new Error("Please sign in first.");
+                }
+
+                const idToken = await auth.currentUser.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/users",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `User Management HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    (error.code || "") +
+                    "\n" +
+                    error.message;
+            }
+        });
+        document.getElementById("login").addEventListener("click", async () => {
+            result.textContent = "Signing in...";
+
+            try {
+                const email = document.getElementById("email").value;
+                const password = document.getElementById("password").value;
+
+                const credential = await signInWithEmailAndPassword(
+                    auth,
+                    email,
+                    password
+                );
+
+                const idToken = await credential.user.getIdToken();
+
+                const response = await fetch(
+                    "http://127.0.0.1:8001/api/v1/users/me",
+                    {
+                        headers: {
+                            "Authorization": `Bearer ${idToken}`
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                result.textContent =
+                    `Backend HTTP status: ${response.status}\n\n` +
+                    JSON.stringify(data, null, 2);
+
+            } catch (error) {
+                result.textContent =
+                    "ERROR:\n\n" +
+                    error.code +
+                    "\n" +
+                    error.message;
+            }
+        });
+    </script>
+<script>
+async function runRouteStopTest() {
+    const result = document.getElementById("result");
+
+    function log(message) {
+        result.textContent += "\n" + message;
+    }
+
+    function fail(message) {
+        throw new Error(message);
+    }
+
+    try {
+        result.textContent = "=== ROUTE STOP FUNCTIONAL TEST ===";
+
+        const firebaseAuth = window.v2vFirebaseAuth;
+
+        if (!firebaseAuth || !firebaseAuth.currentUser) {
+            fail("Please sign in first.");
+        }
+
+        log("Authentication: OK");
+
+        const token = await firebaseAuth.currentUser.getIdToken();
+
+        const headers = {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+        };
+
+        const base =
+            "http://127.0.0.1:8001/api/v1/routes/R001/stops";
+
+        async function request(label, method, url, body = null) {
+            log(`\n${label}`);
+
+            try {
+                const options = {
+                    method,
+                    headers
+                };
+
+                if (body !== null) {
+                    options.body = JSON.stringify(body);
+                }
+
+                const response = await fetch(url, options);
+
+                log(`HTTP ${response.status}`);
+
+                const raw = await response.text();
+
+                let data = null;
+
+                if (raw) {
+                    try {
+                        data = JSON.parse(raw);
+                    } catch {
+                        data = raw;
+                    }
+                }
+
+                if (data !== null) {
+                    log(
+                        typeof data === "string"
+                            ? data
+                            : JSON.stringify(data, null, 2)
+                    );
+                }
+
+                return {
+                    response,
+                    data
+                };
+
+            } catch (networkError) {
+                log("NETWORK ERROR");
+                log(`Name: ${networkError.name || "unknown"}`);
+                log(`Message: ${networkError.message || "unknown"}`);
+
+                throw new Error(
+                    `${label} failed at browser network layer: ` +
+                    `${networkError.message || networkError.name}`
+                );
+            }
+        }
+
+        // --------------------------------------------------
+        // 1. Read current route stops.
+        // --------------------------------------------------
+
+        const initial = await request(
+            "[1] Reading existing R001 stops...",
+            "GET",
+            base
+        );
+
+        if (initial.response.status !== 200) {
+            fail(
+                `Could not read R001 stops. HTTP ${initial.response.status}`
+            );
+        }
+
+        const initialStops = initial.data?.data || [];
+
+        log(
+            "Existing order: " +
+            initialStops
+                .map(stop => `${stop.sequence}:${stop.name}`)
+                .join(" → ")
+        );
+
+        // --------------------------------------------------
+        // 2. Ensure C exists.
+        // --------------------------------------------------
+
+        const cExists = initialStops.some(
+            stop => stop.stop_id === "R001-C"
+        );
+
+        if (cExists) {
+            log("[2] C already exists -> KEEP");
+        } else {
+            const c = await request(
+                "[2] Creating missing C...",
+                "POST",
+                base,
+                {
+                    stop_id: "R001-C",
+                    sequence: 1,
+                    name: "C",
+                    latitude: 22.730000,
+                    longitude: 88.490000,
+                    status: "planned"
+                }
+            );
+
+            if (![200, 201].includes(c.response.status)) {
+                fail(`Could not create C. HTTP ${c.response.status}`);
+            }
+
+            log("C creation: PASS");
+        }
+
+        // --------------------------------------------------
+        // 3. Ensure D exists.
+        // --------------------------------------------------
+
+        const dExists = initialStops.some(
+            stop => stop.stop_id === "R001-D"
+        );
+
+        if (dExists) {
+            log("[3] D already exists -> KEEP");
+        } else {
+            const d = await request(
+                "[3] Creating missing D...",
+                "POST",
+                base,
+                {
+                    stop_id: "R001-D",
+                    sequence: 2,
+                    name: "D",
+                    latitude: 22.735000,
+                    longitude: 88.495000,
+                    status: "planned"
+                }
+            );
+
+            if (![200, 201].includes(d.response.status)) {
+                fail(`Could not create D. HTTP ${d.response.status}`);
+            }
+
+            log("D creation: PASS");
+        }
+
+        // --------------------------------------------------
+        // 4. Ensure E exists.
+        // --------------------------------------------------
+
+        const eExists = initialStops.some(
+            stop => stop.stop_id === "R001-E"
+        );
+
+        if (eExists) {
+            log("[4] E already exists -> KEEP");
+        } else {
+            const e = await request(
+                "[4] Creating missing E...",
+                "POST",
+                base,
+                {
+                    stop_id: "R001-E",
+                    sequence: 3,
+                    name: "E",
+                    latitude: 22.740000,
+                    longitude: 88.500000,
+                    status: "planned"
+                }
+            );
+
+            if (![200, 201].includes(e.response.status)) {
+                fail(`Could not create E. HTTP ${e.response.status}`);
+            }
+
+            log("E creation: PASS");
+        }
+
+        // --------------------------------------------------
+        // 5. Verify complete ordered route.
+        // --------------------------------------------------
+
+        const finalList = await request(
+            "[5] Verifying ordered route stops...",
+            "GET",
+            base
+        );
+
+        if (finalList.response.status !== 200) {
+            fail(
+                `Final route stop GET failed. HTTP ${finalList.response.status}`
+            );
+        }
+
+        const stops = finalList.data?.data || [];
+
+        const ordered = stops
+            .map(stop => `${stop.sequence}:${stop.name}`)
+            .join(" → ");
+
+        log(`Final order: ${ordered}`);
+
+        const expected = "1:C → 2:D → 3:E";
+
+        if (ordered !== expected) {
+            fail(
+                `Ordering mismatch. Expected "${expected}", got "${ordered}"`
+            );
+        }
+
+        log("ORDER VERIFICATION: PASS");
+
+        // --------------------------------------------------
+        // 6. Individual D lookup.
+        // --------------------------------------------------
+
+        const dLookup = await request(
+            "[6] Looking up R001-D...",
+            "GET",
+            `${base}/R001-D`
+        );
+
+        if (dLookup.response.status !== 200) {
+            fail(
+                `R001-D lookup failed. HTTP ${dLookup.response.status}`
+            );
+        }
+
+        if (dLookup.data?.data?.name !== "D") {
+            fail("R001-D returned unexpected data.");
+        }
+
+        log("INDIVIDUAL LOOKUP: PASS");
+
+        // --------------------------------------------------
+        // 7. Duplicate sequence protection.
+        // --------------------------------------------------
+
+        const duplicateSequence = await request(
+            "[7] Testing duplicate sequence 2...",
+            "POST",
+            base,
+            {
+                stop_id: "R001-DUP-SEQ-TEST",
+                sequence: 2,
+                name: "Duplicate Sequence Test",
+                latitude: 22.750000,
+                longitude: 88.510000,
+                status: "planned"
+            }
+        );
+
+        if (duplicateSequence.response.status !== 409) {
+            fail(
+                `Expected HTTP 409 for duplicate sequence, got HTTP ${duplicateSequence.response.status}`
+            );
+        }
+
+        log("DUPLICATE SEQUENCE PROTECTION: PASS");
+
+        // --------------------------------------------------
+        // 8. Duplicate stop ID protection.
+        // --------------------------------------------------
+
+        const duplicateId = await request(
+            "[8] Testing duplicate stop ID R001-C...",
+            "POST",
+            base,
+            {
+                stop_id: "R001-C",
+                sequence: 99,
+                name: "Duplicate ID Test",
+                latitude: 22.760000,
+                longitude: 88.520000,
+                status: "planned"
+            }
+        );
+
+        if (duplicateId.response.status !== 409) {
+            fail(
+                `Expected HTTP 409 for duplicate stop ID, got HTTP ${duplicateId.response.status}`
+            );
+        }
+
+        log("DUPLICATE STOP ID PROTECTION: PASS");
+
+        // --------------------------------------------------
+        // 9. Final verification.
+        // --------------------------------------------------
+
+        const finalVerify = await request(
+            "[9] Final route verification...",
+            "GET",
+            base
+        );
+
+        if (finalVerify.response.status !== 200) {
+            fail(
+                `Final verification GET failed. HTTP ${finalVerify.response.status}`
+            );
+        }
+
+        const finalStops = finalVerify.data?.data || [];
+
+        const finalOrder = finalStops
+            .map(stop => `${stop.sequence}:${stop.name}`)
+            .join(" → ");
+
+        if (finalOrder !== expected) {
+            fail(
+                `Final route changed unexpectedly: ${finalOrder}`
+            );
+        }
+
+        log("FINAL STATE VERIFICATION: PASS");
+
+        log("\n========================================");
+        log("=== ROUTE STOP TEST PASSED ===");
+        log("========================================");
+        log("R001 route: Point A → C → D → E → Point B");
+        log("C: PASS");
+        log("D: PASS");
+        log("E: PASS");
+        log("Ordering: PASS");
+        log("Individual lookup: PASS");
+        log("Duplicate sequence protection: PASS");
+        log("Duplicate stop ID protection: PASS");
+        log("Final database state: PASS");
+
+    } catch (error) {
+        log("\n========================================");
+        log("=== ROUTE STOP TEST FAILED ===");
+        log("========================================");
+        log(error.message || String(error));
+        console.error(error);
+    }
+}
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+async function runBrowserNetworkDiagnostic() {
+    const result = document.getElementById("result");
+
+    function log(message) {
+        result.textContent += "\n" + message;
+    }
+
+    result.textContent = "=== BROWSER NETWORK DIAGNOSTIC ===";
+
+    try {
+        const firebaseAuth = window.v2vFirebaseAuth;
+
+        log("Page origin: " + window.location.origin);
+        log("Target origin: http://127.0.0.1:8001");
+
+        // --------------------------------------------------
+        // TEST 1: OpenAPI without authentication
+        // --------------------------------------------------
+        log("\n[1] Browser -> OpenAPI");
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8001/openapi.json",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+            log("HTTP status: " + response.status);
+
+            const text = await response.text();
+
+            log("Response received: YES");
+            log("Response length: " + text.length);
+
+        } catch (error) {
+            log("FAILED");
+            log("Name: " + error.name);
+            log("Message: " + error.message);
+        }
+
+        // --------------------------------------------------
+        // TEST 2: Route Stop without authentication
+        // --------------------------------------------------
+        log("\n[2] Browser -> Route Stops WITHOUT token");
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8001/api/v1/routes/R001/stops",
+                {
+                    method: "GET",
+                    cache: "no-store"
+                }
+            );
+
+            log("HTTP status: " + response.status);
+
+            const text = await response.text();
+
+            log("Response received: YES");
+            log("Body: " + text);
+
+        } catch (error) {
+            log("FAILED");
+            log("Name: " + error.name);
+            log("Message: " + error.message);
+        }
+
+        // --------------------------------------------------
+        // TEST 3: Route Stop WITH Firebase token
+        // --------------------------------------------------
+        log("\n[3] Browser -> Route Stops WITH Firebase token");
+
+        if (!firebaseAuth || !firebaseAuth.currentUser) {
+            throw new Error("Firebase currentUser is not available.");
+        }
+
+        const token = await firebaseAuth.currentUser.getIdToken();
+
+        log("Firebase token obtained: YES");
+        log("Token length: " + token.length);
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8001/api/v1/routes/R001/stops",
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: {
+                        "Authorization": "Bearer " + token,
+                        "Content-Type": "application/json"
+                    }
+                }
+            );
+
+            log("HTTP status: " + response.status);
+
+            const text = await response.text();
+
+            log("Response received: YES");
+            log("Body: " + text);
+
+        } catch (error) {
+            log("FAILED");
+            log("Name: " + error.name);
+            log("Message: " + error.message);
+            log("Stack: " + (error.stack || "not available"));
+        }
+
+        log("\n========================================");
+        log("=== NETWORK DIAGNOSTIC COMPLETE ===");
+        log("========================================");
+
+    } catch (error) {
+        log("\nDIAGNOSTIC ERROR");
+        log(error.message || String(error));
+        console.error(error);
+    }
+}
+</script>
+
+<script>
+async function runTokenIsolationDiagnostic() {
+    const result = document.getElementById("result");
+
+    function log(message) {
+        result.textContent += "\n" + message;
+    }
+
+    result.textContent = "=== TOKEN ISOLATION DIAGNOSTIC ===";
+
+    try {
+        const firebaseAuth = window.v2vFirebaseAuth;
+
+        log("Page origin: " + window.location.origin);
+        log("Backend: http://127.0.0.1:8001");
+
+        if (!firebaseAuth || !firebaseAuth.currentUser) {
+            throw new Error("Administrator is not signed in.");
+        }
+
+        const token = await firebaseAuth.currentUser.getIdToken();
+
+        log("Firebase token obtained: YES");
+        log("Token length: " + token.length);
+
+        // --------------------------------------------------
+        // TEST 1
+        // Authorization header against PUBLIC OpenAPI
+        // --------------------------------------------------
+        log("\n[1] OpenAPI + REAL Authorization header");
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8001/openapi.json",
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                }
+            );
+
+            log("HTTP status: " + response.status);
+
+            const text = await response.text();
+
+            log("Response received: YES");
+            log("Response length: " + text.length);
+
+        } catch (error) {
+            log("FAILED");
+            log("Name: " + error.name);
+            log("Message: " + error.message);
+        }
+
+        // --------------------------------------------------
+        // TEST 2
+        // Deliberately invalid token against protected API
+        // --------------------------------------------------
+        log("\n[2] Route Stops + INVALID Authorization header");
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8001/api/v1/routes/R001/stops",
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: {
+                        "Authorization": "Bearer deliberately-invalid-test-token"
+                    }
+                }
+            );
+
+            log("HTTP status: " + response.status);
+
+            const text = await response.text();
+
+            log("Response received: YES");
+            log("Body: " + text);
+
+        } catch (error) {
+            log("FAILED");
+            log("Name: " + error.name);
+            log("Message: " + error.message);
+        }
+
+        // --------------------------------------------------
+        // TEST 3
+        // Real Firebase token against protected API
+        // --------------------------------------------------
+        log("\n[3] Route Stops + REAL Firebase token");
+
+        try {
+            const response = await fetch(
+                "http://127.0.0.1:8001/api/v1/routes/R001/stops",
+                {
+                    method: "GET",
+                    cache: "no-store",
+                    headers: {
+                        "Authorization": "Bearer " + token
+                    }
+                }
+            );
+
+            log("HTTP status: " + response.status);
+
+            const text = await response.text();
+
+            log("Response received: YES");
+            log("Body: " + text);
+
+        } catch (error) {
+            log("FAILED");
+            log("Name: " + error.name);
+            log("Message: " + error.message);
+            log("Stack: " + (error.stack || "not available"));
+        }
+
+        log("\n========================================");
+        log("=== TOKEN ISOLATION COMPLETE ===");
+        log("========================================");
+
+    } catch (error) {
+        log("\nDIAGNOSTIC ERROR");
+        log(error.message || String(error));
+        console.error(error);
+    }
+}
+</script>

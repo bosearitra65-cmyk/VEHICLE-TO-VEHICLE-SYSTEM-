@@ -1,0 +1,68 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+secrets/
+*.pem
+*.key
+
+# Local databases / runtime state
+*.db
+*.sqlite
+*.sqlite3
+
+# Generated audit / diagnostic output
+*.audit.txt
+*_audit.txt
+*_AUDIT.txt
+*_audit_output.txt
+*_audit.txt
+audit*.txt
+active_audit.ps1
+active_backend_audit.txt
+ACTIVE_BACKEND_STATE_AUDIT.txt
+backend_audit_output.txt
+backend_pre_implementation_audit.txt
+audit1_backend_file_list.txt
+audit1_backend_source.txt
+STAGE2_LOCATION_AUDIT_OUTPUT.txt
+stage3_comprehensive_audit.txt
+stage3_route_progress_deviation_audit.txt
+stage3_targeted_source_audit.txt
+stage10_research_framework_audit.txt
+stage10_step2_mechanism_inventory.txt
+STEP_*.txt
+
+# Local backup / generated files
+.audit_backups/
+*.backup.*
+*.before-*.py
+*.before-*.html
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Historical backup source files
+*.bak
+*.stage*.bak

@@ -10,10 +10,15 @@ def run_monitor_cycle(
     db = SessionLocal()
 
     try:
-        return monitor_vehicle_communications(
+        results = monitor_vehicle_communications(
             db=db,
             freshness_threshold_seconds=freshness_threshold_seconds,
         )
+        db.commit()
+        return results
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 

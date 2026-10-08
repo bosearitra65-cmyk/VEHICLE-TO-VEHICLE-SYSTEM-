@@ -14,6 +14,7 @@ class Vehicle(Base):
         autoincrement=True,
     )
 
+    display_number: Mapped[int] = mapped_column(Integer, nullable=False, unique=True, index=True)
     vehicle_id: Mapped[str] = mapped_column(
         String(100),
         unique=True,

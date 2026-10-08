@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from app.research.candidate_reliability import (
@@ -86,6 +86,16 @@ def _temporal_evidence(
 ) -> tuple[float, float | None]:
     if previous_timestamp is None:
         return 1.0, None
+
+    if current_timestamp.tzinfo is None:
+        current_timestamp = current_timestamp.replace(tzinfo=timezone.utc)
+    else:
+        current_timestamp = current_timestamp.astimezone(timezone.utc)
+
+    if previous_timestamp.tzinfo is None:
+        previous_timestamp = previous_timestamp.replace(tzinfo=timezone.utc)
+    else:
+        previous_timestamp = previous_timestamp.astimezone(timezone.utc)
 
     gap = (
         current_timestamp - previous_timestamp

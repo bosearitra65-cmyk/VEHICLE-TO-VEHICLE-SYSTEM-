@@ -20,6 +20,7 @@ class VehicleUpdate(BaseModel):
 
 class VehicleOut(BaseModel):
     id: int
+    display_number: int
     vehicle_id: str
     device_id: str | None
     name: str | None
@@ -67,8 +68,8 @@ class ConvoyOut(BaseModel):
 
 class ConvoyMemberCreate(BaseModel):
     vehicle_id: str = Field(min_length=1, max_length=100)
-    role: str = Field(min_length=1, max_length=50)
-    status: str = Field(default="active", min_length=1, max_length=50)
+    role: str = Field(pattern="^(LEADER|FOLLOWER)$")
+    status: str = Field(default="active", pattern="^active$")
 
 
 class ConvoyMemberOut(BaseModel):

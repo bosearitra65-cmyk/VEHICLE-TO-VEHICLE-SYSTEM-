@@ -51,6 +51,12 @@ def create_convoy(
 ):
     repository = ConvoyRepository(db)
 
+    if payload.leader_vehicle_id is not None:
+        raise HTTPException(
+            status_code=400,
+            detail="Leader must be assigned after convoy membership is created",
+        )
+
     if repository.get_by_convoy_id(payload.convoy_id):
         raise HTTPException(status_code=409, detail="Convoy already exists")
 
@@ -188,6 +194,12 @@ def add_member(
     if existing is not None and existing.status == "active":
         raise HTTPException(status_code=409, detail="Vehicle is already an active convoy member")
 
+    if payload.role == "LEADER":
+        raise HTTPException(
+            status_code=400,
+            detail="Use the administrator leader-assignment endpoint to select the convoy leader",
+        )
+
     try:
         member = member_repository.add_member(
             convoy_id=convoy_id,
@@ -228,6 +240,10 @@ def remove_member(
     if member is None or member.status != "active":
         raise HTTPException(status_code=404, detail="Active convoy membership not found")
 
+    if convoy_repository.get_by_convoy_id(convoy_id).leader_vehicle_id == vehicle_id:
+        convoy = convoy_repository.get_by_convoy_id(convoy_id)
+        convoy_repository.update_leader(convoy, None)
+
     member_repository.remove_member(member)
     db.commit()
     db.refresh(member)
@@ -267,6 +283,18 @@ def assign_leader(
         raise HTTPException(
             status_code=409,
             detail="Leader must be an active convoy member",
+        )
+
+    active_members = member_repository.list_members(
+        convoy_id,
+        active_only=True,
+    )
+
+    for active_member in active_members:
+        active_member.role = (
+            "LEADER"
+            if active_member.vehicle_id == payload.vehicle_id
+            else "FOLLOWER"
         )
 
     convoy_repository.update_leader(convoy, payload.vehicle_id)

@@ -30,7 +30,11 @@ class VehicleRepository:
         device_id: str | None = None,
         name: str | None = None,
     ) -> Vehicle:
+        max_number = self.db.query(Vehicle.display_number).order_by(Vehicle.display_number.desc()).first()
+        next_display_number = (max_number[0] if max_number and max_number[0] is not None else 0) + 1
+
         vehicle = Vehicle(
+            display_number=next_display_number,
             vehicle_id=vehicle_id,
             device_id=device_id,
             name=name,

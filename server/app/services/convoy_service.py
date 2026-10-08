@@ -64,10 +64,18 @@ class ConvoyService:
         if existing is not None and existing.status == "active":
             raise ValueError("Vehicle is already an active convoy member")
 
+        if role not in {"LEADER", "FOLLOWER"}:
+            raise ValueError("Convoy member role must be LEADER or FOLLOWER")
+
+        if role == "LEADER":
+            raise ValueError(
+                "Use update_leader to assign the convoy leader"
+            )
+
         return self.member_repository.add_member(
             convoy_id=convoy_id,
             vehicle_id=vehicle_id,
-            role=role,
+            role="FOLLOWER",
             status=status,
         )
 
@@ -113,6 +121,39 @@ class ConvoyService:
 
         if convoy is None:
             raise ValueError("Convoy not found")
+
+        if leader_vehicle_id is None:
+            active_members = self.member_repository.list_members(
+                convoy_id=convoy_id,
+                active_only=True,
+            )
+            for member in active_members:
+                member.role = "FOLLOWER"
+
+            return self.convoy_repository.update_leader(
+                convoy=convoy,
+                leader_vehicle_id=None,
+            )
+
+        member = self.member_repository.get_member(
+            convoy_id=convoy_id,
+            vehicle_id=leader_vehicle_id,
+        )
+
+        if member is None or member.status != "active":
+            raise ValueError("Leader must be an active convoy member")
+
+        active_members = self.member_repository.list_members(
+            convoy_id=convoy_id,
+            active_only=True,
+        )
+
+        for active_member in active_members:
+            active_member.role = (
+                "LEADER"
+                if active_member.vehicle_id == leader_vehicle_id
+                else "FOLLOWER"
+            )
 
         return self.convoy_repository.update_leader(
             convoy=convoy,

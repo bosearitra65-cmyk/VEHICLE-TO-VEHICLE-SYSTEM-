@@ -42,6 +42,10 @@ def _initialize_firebase() -> None:
     except FirebaseAuthenticationError:
         raise
     except Exception as exc:
+        print(
+            f"FIREBASE_ADMIN_INIT_DIAGNOSTIC: {type(exc).__name__}: {exc}",
+            flush=True,
+        )
         raise FirebaseAuthenticationError(
             "Firebase Admin SDK initialization failed"
         ) from exc

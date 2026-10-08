@@ -1,4 +1,4 @@
-﻿from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session
 
 from app.config.constants import COMMUNICATION_DISCONNECTED
 from app.models.alert import Alert
@@ -17,8 +17,9 @@ def monitor_vehicle_communications(
     results = []
 
     for state in states:
+        # Communication freshness uses server receipt/update time; state.timestamp remains telemetry time.
         fresh = is_fresh(
-            state.timestamp,
+            state.updated_at,
             freshness_threshold_seconds,
         )
 

@@ -70,7 +70,8 @@ def ingest_vehicle_state(
     previous_availability = None
 
     if state is not None:
-        previous_fresh = is_fresh(state.timestamp)
+        # Previous communication freshness uses server receipt/update time.
+        previous_fresh = is_fresh(state.updated_at)
 
         previous_availability = determine_availability(
             is_fresh=previous_fresh,
@@ -121,10 +122,10 @@ def ingest_vehicle_state(
             boot_id=payload.boot_id,
         )
 
-    current_fresh = is_fresh(payload.timestamp)
-
+    # A successfully received packet is live from the server perspective.
+    # payload.timestamp remains telemetry time and is not the communication clock.
     current_availability = determine_availability(
-        is_fresh=current_fresh,
+        is_fresh=True,
         communication_status=payload.communication_status,
     )
 

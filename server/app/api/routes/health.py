@@ -5,6 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_db
+from app.config.settings import settings
 from app.schemas.common import APIResponse
 from app.utils.identifiers import generate_request_id
 
@@ -25,5 +26,7 @@ def health_check(db: Session = Depends(get_db)):
         data={
             "status": "healthy",
             "database": "connected",
+            "database_backend": db.get_bind().dialect.name,
+            "environment": settings.environment,
         },
     )

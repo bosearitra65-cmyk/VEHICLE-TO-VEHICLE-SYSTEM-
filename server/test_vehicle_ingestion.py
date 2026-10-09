@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+from sqlalchemy import func
 
 from app.database.session import SessionLocal
 from app.models.event import Event
@@ -18,7 +19,9 @@ def test_vehicle_ingestion_commits_state_history_and_session():
     boot_id = "TEST-INGEST-BOOT001"
 
     try:
+        next_display_number = (db.query(func.max(Vehicle.display_number)).scalar() or 0) + 1
         vehicle = Vehicle(
+            display_number=next_display_number,
             vehicle_id=vehicle_id,
             device_id=device_id,
             name="Ingestion Test Vehicle",
@@ -88,6 +91,7 @@ def test_vehicle_ingestion_commits_state_history_and_session():
         assert events == []
 
     finally:
+        db.rollback()
         db.query(VehicleHistory).filter(
             VehicleHistory.vehicle_id == vehicle_id
         ).delete(synchronize_session=False)

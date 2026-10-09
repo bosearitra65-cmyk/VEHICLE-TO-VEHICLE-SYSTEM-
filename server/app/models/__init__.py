@@ -6,6 +6,7 @@ from app.models.journey import Journey
 from app.models.route import Route
 from app.models.user import User
 from app.models.user_resource_access import UserResourceAccess
+from app.models.research_records import ResearchExperimentRecord, ResearchRunRecord
 from app.models.vehicle import Vehicle
 from app.models.vehicle_history import VehicleHistory
 from app.models.vehicle_session import VehicleSession
@@ -24,6 +25,8 @@ __all__ = [
     "VehicleHistory",
     "VehicleSession",
     "VehicleState",
+    "ResearchExperimentRecord",
+    "ResearchRunRecord",
 ]
 
 from app.models.route_stop import RouteStop

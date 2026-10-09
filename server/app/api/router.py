@@ -19,6 +19,8 @@ from app.api.routes.location import router as location_router
 from app.api.routes.route_progress import router as route_progress_router
 
 
+from app.api.routes.research import router as research_router
+
 api_router = APIRouter()
 
 api_router.include_router(health_router)
@@ -40,3 +42,4 @@ api_router.include_router(operational_intelligence.router)
 
 
 api_router.include_router(realtime.router)
+api_router.include_router(research_router)

@@ -18,6 +18,7 @@ from app.models.convoy_member import ConvoyMember
 from app.models.journey import Journey
 from app.models.route import Route
 from app.models.user_resource_access import UserResourceAccess
+from app.models.research_records import ResearchExperimentRecord, ResearchRunRecord
 
 config = context.config
 

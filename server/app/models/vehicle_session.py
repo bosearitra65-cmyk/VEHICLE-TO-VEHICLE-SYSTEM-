@@ -1,6 +1,7 @@
-﻿from datetime import datetime
+﻿
+from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String
+from sqlalchemy import Boolean, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database.base import Base
@@ -42,4 +43,14 @@ class VehicleSession(Base):
         Boolean,
         nullable=False,
         default=True,
+    )
+
+    last_sequence_number: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
+
+    last_payload_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
     )

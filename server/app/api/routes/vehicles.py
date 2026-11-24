@@ -1,9 +1,14 @@
-﻿from datetime import datetime, timezone
+﻿
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_db, require_device_auth, require_resource_access
+from app.api.dependencies import (
+    get_db,
+    require_device_auth,
+    require_resource_access,
+)
 from app.auth.permissions import Permission
 from app.database.repositories.vehicle_repository import VehicleRepository
 from app.database.repositories.vehicle_state_repository import VehicleStateRepository
@@ -19,7 +24,10 @@ from app.schemas.vehicles import (
 from app.services.vehicle_availability import get_vehicle_availability
 from app.services.vehicle_freshness import get_vehicle_freshness
 from app.services.vehicle_history_service import get_vehicle_history
-from app.services.vehicle_ingestion import ingest_vehicle_state
+from app.services.vehicle_ingestion import (
+    VehicleSequenceError,
+    ingest_vehicle_state,
+)
 from app.utils.identifiers import generate_request_id
 
 
@@ -37,7 +45,7 @@ router = APIRouter(
 def receive_vehicle_state(
     payload: VehicleStateIn,
     db: Session = Depends(get_db),
-    authenticated_device = Depends(require_device_auth),
+    authenticated_device=Depends(require_device_auth),
 ):
     if authenticated_device is not None:
         if authenticated_device.vehicle_id != payload.vehicle_id:
@@ -45,13 +53,23 @@ def receive_vehicle_state(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Authenticated device is not assigned to this vehicle",
             )
+
         if payload.device_id != authenticated_device.device_id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Payload device_id does not match authenticated device",
             )
 
-    state = ingest_vehicle_state(db, payload)
+    try:
+        state = ingest_vehicle_state(db, payload)
+
+    except VehicleSequenceError as exc:
+        db.rollback()
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=exc.message,
+        ) from exc
 
     return APIResponse(
         request_id=generate_request_id(),

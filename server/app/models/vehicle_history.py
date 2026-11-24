@@ -1,4 +1,5 @@
-﻿from datetime import datetime
+﻿
+from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, Float, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
@@ -110,4 +111,9 @@ class VehicleHistory(Base):
         nullable=False,
         default=datetime.utcnow,
         index=True,
+    )
+
+    payload_hash: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
     )

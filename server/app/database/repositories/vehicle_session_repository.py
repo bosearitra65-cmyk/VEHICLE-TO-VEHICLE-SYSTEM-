@@ -1,3 +1,4 @@
+
 from datetime import datetime
 
 from sqlalchemy.orm import Session
@@ -24,6 +25,21 @@ class VehicleSessionRepository:
             .first()
         )
 
+    def get_by_vehicle_and_boot(
+        self,
+        vehicle_id: str,
+        boot_id: str,
+    ) -> VehicleSession | None:
+        return (
+            self.db.query(VehicleSession)
+            .filter(
+                VehicleSession.vehicle_id == vehicle_id,
+                VehicleSession.boot_id == boot_id,
+            )
+            .order_by(VehicleSession.started_at.desc())
+            .first()
+        )
+
     def list_active_by_vehicle(
         self,
         vehicle_id: str,
@@ -44,7 +60,22 @@ class VehicleSessionRepository:
     ) -> VehicleSession:
         session.last_seen_at = last_seen_at
         self.db.flush()
-        self.db.refresh(session)
+        return session
+
+    def update_sequence(
+        self,
+        session: VehicleSession,
+        sequence_number: int,
+        payload_hash: str | None = None,
+        last_seen_at: datetime | None = None,
+    ) -> VehicleSession:
+        session.last_sequence_number = sequence_number
+        session.last_payload_hash = payload_hash
+
+        if last_seen_at is not None:
+            session.last_seen_at = last_seen_at
+
+        self.db.flush()
         return session
 
     def deactivate(
@@ -53,7 +84,6 @@ class VehicleSessionRepository:
     ) -> VehicleSession:
         session.is_active = False
         self.db.flush()
-        self.db.refresh(session)
         return session
 
     def create(
@@ -62,6 +92,8 @@ class VehicleSessionRepository:
         boot_id: str,
         started_at: datetime,
         last_seen_at: datetime,
+        last_sequence_number: int | None = None,
+        last_payload_hash: str | None = None,
     ) -> VehicleSession:
         session = VehicleSession(
             vehicle_id=vehicle_id,
@@ -69,10 +101,10 @@ class VehicleSessionRepository:
             started_at=started_at,
             last_seen_at=last_seen_at,
             is_active=True,
+            last_sequence_number=last_sequence_number,
+            last_payload_hash=last_payload_hash,
         )
 
         self.db.add(session)
         self.db.flush()
-        self.db.refresh(session)
-
         return session

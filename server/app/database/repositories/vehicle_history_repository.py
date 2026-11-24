@@ -1,3 +1,4 @@
+
 from datetime import datetime
 
 from sqlalchemy.orm import Session
@@ -8,6 +9,24 @@ from app.models.vehicle_history import VehicleHistory
 class VehicleHistoryRepository:
     def __init__(self, db: Session):
         self.db = db
+
+    def get_by_session_sequence(
+        self,
+        vehicle_id: str,
+        device_id: str,
+        boot_id: str,
+        sequence_number: int,
+    ) -> VehicleHistory | None:
+        return (
+            self.db.query(VehicleHistory)
+            .filter(
+                VehicleHistory.vehicle_id == vehicle_id,
+                VehicleHistory.device_id == device_id,
+                VehicleHistory.boot_id == boot_id,
+                VehicleHistory.sequence_number == sequence_number,
+            )
+            .first()
+        )
 
     def create(
         self,
@@ -28,6 +47,7 @@ class VehicleHistoryRepository:
         transport: str | None = None,
         convoy_id: str | None = None,
         role: str | None = None,
+        payload_hash: str | None = None,
     ) -> VehicleHistory:
         history = VehicleHistory(
             vehicle_id=vehicle_id,
@@ -47,6 +67,7 @@ class VehicleHistoryRepository:
             transport=transport,
             convoy_id=convoy_id,
             role=role,
+            payload_hash=payload_hash,
         )
 
         self.db.add(history)
@@ -62,7 +83,10 @@ class VehicleHistoryRepository:
         return (
             self.db.query(VehicleHistory)
             .filter(VehicleHistory.vehicle_id == vehicle_id)
-            .order_by(VehicleHistory.sequence_number.asc())
+            .order_by(
+                VehicleHistory.recorded_at.asc(),
+                VehicleHistory.id.asc(),
+            )
             .all()
         )
 
@@ -79,7 +103,10 @@ class VehicleHistoryRepository:
                 VehicleHistory.timestamp >= start_time,
                 VehicleHistory.timestamp <= end_time,
             )
-            .order_by(VehicleHistory.timestamp.asc())
+            .order_by(
+                VehicleHistory.timestamp.asc(),
+                VehicleHistory.id.asc(),
+            )
             .all()
         )
 
@@ -90,6 +117,9 @@ class VehicleHistoryRepository:
         return (
             self.db.query(VehicleHistory)
             .filter(VehicleHistory.vehicle_id == vehicle_id)
-            .order_by(VehicleHistory.sequence_number.desc())
+            .order_by(
+                VehicleHistory.recorded_at.desc(),
+                VehicleHistory.id.desc(),
+            )
             .first()
         )

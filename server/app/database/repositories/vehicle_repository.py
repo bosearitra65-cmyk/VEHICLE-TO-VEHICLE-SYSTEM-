@@ -1,4 +1,5 @@
-﻿from sqlalchemy.orm import Session
+﻿
+from sqlalchemy.orm import Session
 
 from app.models.vehicle import Vehicle
 
@@ -14,6 +15,17 @@ class VehicleRepository:
             .first()
         )
 
+    def get_by_vehicle_id_for_update(
+        self,
+        vehicle_id: str,
+    ) -> Vehicle | None:
+        return (
+            self.db.query(Vehicle)
+            .filter(Vehicle.vehicle_id == vehicle_id)
+            .with_for_update()
+            .first()
+        )
+
     def get_by_device_id(self, device_id: str) -> Vehicle | None:
         return (
             self.db.query(Vehicle)
@@ -22,7 +34,11 @@ class VehicleRepository:
         )
 
     def list_all(self) -> list[Vehicle]:
-        return self.db.query(Vehicle).order_by(Vehicle.id.asc()).all()
+        return (
+            self.db.query(Vehicle)
+            .order_by(Vehicle.id.asc())
+            .all()
+        )
 
     def create(
         self,
@@ -30,8 +46,17 @@ class VehicleRepository:
         device_id: str | None = None,
         name: str | None = None,
     ) -> Vehicle:
-        max_number = self.db.query(Vehicle.display_number).order_by(Vehicle.display_number.desc()).first()
-        next_display_number = (max_number[0] if max_number and max_number[0] is not None else 0) + 1
+        max_number = (
+            self.db.query(Vehicle.display_number)
+            .order_by(Vehicle.display_number.desc())
+            .first()
+        )
+
+        next_display_number = (
+            max_number[0]
+            if max_number and max_number[0] is not None
+            else 0
+        ) + 1
 
         vehicle = Vehicle(
             display_number=next_display_number,
@@ -40,9 +65,11 @@ class VehicleRepository:
             name=name,
             is_active=True,
         )
+
         self.db.add(vehicle)
         self.db.flush()
         self.db.refresh(vehicle)
+
         return vehicle
 
     def update(
@@ -54,11 +81,14 @@ class VehicleRepository:
     ) -> Vehicle:
         if device_id is not None:
             vehicle.device_id = device_id
+
         if name is not None:
             vehicle.name = name
+
         if is_active is not None:
             vehicle.is_active = is_active
 
         self.db.flush()
         self.db.refresh(vehicle)
+
         return vehicle

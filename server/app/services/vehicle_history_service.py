@@ -1,8 +1,11 @@
+
 from datetime import datetime
 
 from sqlalchemy.orm import Session
 
-from app.database.repositories.vehicle_history_repository import VehicleHistoryRepository
+from app.database.repositories.vehicle_history_repository import (
+    VehicleHistoryRepository,
+)
 from app.models.vehicle_history import VehicleHistory
 from app.models.vehicle_state import VehicleState
 
@@ -10,6 +13,7 @@ from app.models.vehicle_state import VehicleState
 def create_vehicle_history(
     db: Session,
     state: VehicleState,
+    payload_hash: str | None = None,
 ) -> VehicleHistory:
     repository = VehicleHistoryRepository(db)
 
@@ -31,7 +35,9 @@ def create_vehicle_history(
         transport=state.transport,
         convoy_id=state.convoy_id,
         role=state.role,
+        payload_hash=payload_hash,
     )
+
 
 def get_vehicle_history(
     db: Session,
@@ -48,6 +54,7 @@ def get_vehicle_history_by_time(
     end_time: datetime,
 ) -> list[VehicleHistory]:
     repository = VehicleHistoryRepository(db)
+
     return repository.list_by_vehicle_and_time(
         vehicle_id=vehicle_id,
         start_time=start_time,

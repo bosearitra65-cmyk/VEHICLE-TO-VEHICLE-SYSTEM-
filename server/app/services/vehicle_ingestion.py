@@ -1,7 +1,15 @@
+
+import hashlib
+import json
+
 from sqlalchemy.orm import Session
 
 from app.config.constants import EVENT_GPS_QUALITY, EVENT_SEQUENCE_GAP
 from app.database.repositories.vehicle_state_repository import VehicleStateRepository
+from app.database.repositories.vehicle_repository import VehicleRepository
+from app.database.repositories.vehicle_session_repository import (
+    VehicleSessionRepository,
+)
 from app.models.vehicle_state import VehicleState
 from app.schemas.vehicles import VehicleStateIn
 from app.services.alert_resolution import resolve_communication_alerts
@@ -32,10 +40,32 @@ class VehicleSequenceError(Exception):
         super().__init__(message)
 
 
+def _calculate_payload_hash(payload: VehicleStateIn) -> str:
+    payload_data = payload.model_dump(mode="json")
+
+    canonical_payload = json.dumps(
+        payload_data,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+
+    return hashlib.sha256(
+        canonical_payload.encode("utf-8")
+    ).hexdigest()
+
+
 def ingest_vehicle_state(
     db: Session,
     payload: VehicleStateIn,
 ) -> VehicleState:
+    # PostgreSQL: serialize telemetry updates for this vehicle.
+    # SQLite does not enforce SELECT FOR UPDATE.
+    vehicle_repository = VehicleRepository(db)
+
+    vehicle_repository.get_by_vehicle_id_for_update(
+        payload.vehicle_id,
+    )
+
     validate_vehicle_identity(
         db=db,
         vehicle_id=payload.vehicle_id,
@@ -43,6 +73,47 @@ def ingest_vehicle_state(
     )
 
     validate_vehicle_timestamp(payload.timestamp)
+
+    payload_hash = _calculate_payload_hash(payload)
+
+    state_repository = VehicleStateRepository(db)
+    history_repository = VehicleSessionRepository(db)
+
+    # Check whether this exact packet has already been recorded.
+    # This also allows safe retries from previously inactive boot sessions.
+    if payload.boot_id is not None:
+        from app.database.repositories.vehicle_history_repository import (
+            VehicleHistoryRepository,
+        )
+
+        history_repository_for_packets = VehicleHistoryRepository(db)
+
+        existing_history = (
+            history_repository_for_packets.get_by_session_sequence(
+                vehicle_id=payload.vehicle_id,
+                device_id=payload.device_id,
+                boot_id=payload.boot_id,
+                sequence_number=payload.sequence_number,
+            )
+        )
+
+        if existing_history is not None:
+            if existing_history.payload_hash == payload_hash:
+                existing_state = state_repository.get_by_vehicle_id(
+                    payload.vehicle_id,
+                )
+
+                if existing_state is None:
+                    raise VehicleSequenceError(
+                        "Previously recorded packet has no current vehicle state."
+                    )
+
+                return existing_state
+
+            raise VehicleSequenceError(
+                "Sequence conflict: this boot session already used "
+                "this sequence number with different telemetry data."
+            )
 
     try:
         validate_gps_quality(payload)
@@ -55,13 +126,10 @@ def ingest_vehicle_state(
             message=str(exc),
             sequence_number=payload.sequence_number,
         )
+
         process_event_for_alert(db=db, event=event)
-
         db.commit()
-
         raise
-
-    state_repository = VehicleStateRepository(db)
 
     state = state_repository.get_by_vehicle_id(
         payload.vehicle_id,
@@ -70,7 +138,6 @@ def ingest_vehicle_state(
     previous_availability = None
 
     if state is not None:
-        # Previous communication freshness uses server receipt/update time.
         previous_fresh = is_fresh(state.updated_at)
 
         previous_availability = determine_availability(
@@ -84,7 +151,23 @@ def ingest_vehicle_state(
     previous_speed = state.speed if state else None
     previous_heading = state.heading if state else None
 
-    last_sequence = state.sequence_number if state else None
+    vehicle_session = None
+
+    if payload.boot_id is not None:
+        try:
+            vehicle_session = get_or_create_vehicle_session(
+                db=db,
+                vehicle_id=payload.vehicle_id,
+                boot_id=payload.boot_id,
+            )
+        except ValueError as exc:
+            raise VehicleSequenceError(str(exc)) from exc
+
+        last_sequence = vehicle_session.last_sequence_number
+
+    else:
+        # Legacy devices without a boot ID retain vehicle-wide validation.
+        last_sequence = state.sequence_number if state else None
 
     sequence_result = validate_sequence(
         incoming_sequence=payload.sequence_number,
@@ -93,12 +176,14 @@ def ingest_vehicle_state(
 
     if sequence_result.status == SequenceStatus.DUPLICATE:
         raise VehicleSequenceError(
-            "Duplicate vehicle state sequence"
+            "Duplicate sequence number without a matching recorded packet."
         )
 
     if sequence_result.status == SequenceStatus.OUT_OF_ORDER:
         raise VehicleSequenceError(
-            "Vehicle state sequence is out of order"
+            f"Out-of-order sequence number. "
+            f"Expected {sequence_result.expected_sequence}, "
+            f"received {payload.sequence_number}."
         )
 
     if sequence_result.status == SequenceStatus.GAP:
@@ -115,15 +200,6 @@ def ingest_vehicle_state(
             sequence_number=payload.sequence_number,
         )
 
-    if payload.boot_id is not None:
-        get_or_create_vehicle_session(
-            db=db,
-            vehicle_id=payload.vehicle_id,
-            boot_id=payload.boot_id,
-        )
-
-    # A successfully received packet is live from the server perspective.
-    # payload.timestamp remains telemetry time and is not the communication clock.
     current_availability = determine_availability(
         is_fresh=True,
         communication_status=payload.communication_status,
@@ -170,6 +246,7 @@ def ingest_vehicle_state(
             convoy_id=payload.convoy_id,
             role=payload.role,
         )
+
     else:
         state.sequence_number = payload.sequence_number
         state.timestamp = payload.timestamp
@@ -191,7 +268,16 @@ def ingest_vehicle_state(
     create_vehicle_history(
         db=db,
         state=state,
+        payload_hash=payload_hash,
     )
+
+    # Advance the session counter only for a newly accepted packet.
+    if vehicle_session is not None:
+        VehicleSessionRepository(db).update_sequence(
+            session=vehicle_session,
+            sequence_number=payload.sequence_number,
+            payload_hash=payload_hash,
+        )
 
     route_progress_result = evaluate_route_progress(
         db=db,
@@ -200,9 +286,6 @@ def ingest_vehicle_state(
         previous_longitude=previous_longitude,
     )
 
-    # Step 10.5.3 research consumer: read-only evidence extraction.
-    # This result is intentionally transient; persistence/decision logic
-    # belongs to later Stage 10 steps.
     research_evidence = evaluate_vehicle_evidence(
         current_state=state,
         previous_timestamp=previous_timestamp,
@@ -213,8 +296,6 @@ def ingest_vehicle_state(
         route_result=route_progress_result,
     )
 
-    # Keep the value available for the current ingestion execution only.
-    # No authoritative DB/realtime mutation is performed by the adapter.
     _ = research_evidence
 
     research_decision = integrate_decision(
